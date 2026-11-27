@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生成 PWA 图标 · 极巨大冒险计数器</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #0b0d12; color: #eef0f6; margin: 0; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px; padding: 32px 20px;
+    background-image: radial-gradient(ellipse 70% 45% at 50% 0%, rgba(74,158,255,0.12), transparent 70%);
+  }
+  h1 { font-size: 20px; margin: 0; font-weight: 700; }
+  p { color: #858b9e; font-size: 13px; margin: 0; text-align: center; line-height: 1.75; max-width: 460px; }
+  p b { color: #c5cad8; }
+  .preview { display: flex; gap: 18px; align-items: center; margin: 6px 0; }
+  .preview canvas { border-radius: 22px; box-shadow: 0 12px 34px rgba(0,0,0,0.55); display: block; }
+  button {
+    padding: 16px 34px; font-size: 16px; font-weight: 700; color: #001428;
+    background: linear-gradient(180deg, #6ab8ff, #4a9eff); border: none; border-radius: 14px;
+    cursor: pointer; box-shadow: 0 5px 0 #2d6bb3; font-family: inherit; letter-spacing: 1px;
+  }
+  button:active { transform: translateY(3px); box-shadow: 0 2px 0 #2d6bb3; }
+  button:disabled { filter: grayscale(0.4) brightness(0.85); cursor: default; }
+  .list { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; font-size: 12px; color: #858b9e; }
+  .list span {
+    background: #1c2030; border: 1px solid #2a2f40; border-radius: 8px; padding: 6px 10px;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .note {
+    border-top: 1px solid #2a2f40; padding-top: 16px; margin-top: 4px; max-width: 460px;
+    font-size: 12px; color: #858b9e; line-height: 1.8; text-align: left;
+  }
+</style>
+</head>
+<body>
+<h1>✨ 极巨大冒险计数器 · 图标生成</h1>
+<p>点下面的按钮会依次下载 <b>3 个 PNG</b>。<br>把它们和 <b>index.html</b> 放在同一个文件夹里即可（文件名不要改）。</p>
+
+<div class="preview" id="preview"></div>
+
+<button id="genBtn">生成并下载 3 个图标</button>
+
+<div class="list">
+  <span>icon-192.png</span>
+  <span>icon-512.png</span>
+  <span>icon-512-maskable.png</span>
+</div>
+
+<p class="note">
+  · 浏览器可能会提示「是否允许下载多个文件」，选允许。<br>
+  · 已经提供了 <b>icon.svg</b>，Chrome / Edge 不生成 PNG 也能装；生成 PNG 主要是为了 iOS 主屏图标和更广的兼容性。<br>
+  · 这几个文件只用生成一次，之后改名字重传也会覆盖。
+</p>
+
+<script>
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawStar(ctx, cx, cy, outer, inner, color, alpha) {
+  ctx.beginPath();
+  for (var i = 0; i < 8; i++) {
+    var angle = (Math.PI / 4) * i - Math.PI / 2;
+    var r = i % 2 === 0 ? outer : inner;
+    var x = cx + Math.cos(angle) * r;
+    var y = cy + Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.globalAlpha = alpha == null ? 1 : alpha;
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+function drawIcon(size, maskable) {
+  var canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  var ctx = canvas.getContext('2d');
+  var c = size / 2;
+
+  // 背景
+  var bg = ctx.createLinearGradient(0, 0, size, size);
+  bg.addColorStop(0, '#0b0d12');
+  bg.addColorStop(1, '#1c2030');
+  ctx.fillStyle = bg;
+  if (maskable) {
+    ctx.fillRect(0, 0, size, size);           // 满幅，交给系统裁切
+  } else {
+    roundRect(ctx, 0, 0, size, size, size * 0.22);
+    ctx.fill();
+  }
+
+  // 顶部微光
+  var glow = ctx.createRadialGradient(c, size * 0.16, 0, c, size * 0.16, size * 0.62);
+  glow.addColorStop(0, 'rgba(74,158,255,0.30)');
+  glow.addColorStop(1, 'rgba(74,158,255,0)');
+  ctx.fillStyle = glow;
+  if (maskable) ctx.fillRect(0, 0, size, size);
+  else { roundRect(ctx, 0, 0, size, size, size * 0.22); ctx.fill(); }
+
+  // 图形整体缩放：maskable 收进安全区
+  var k = maskable ? 0.86 : 1;
+  var ringR = size * 0.33 * k;
+  var lw = size * 0.043 * k;
+
+  ctx.strokeStyle = '#4a9eff';
+  ctx.lineWidth = lw;
+  ctx.lineCap = 'round';
+
+  // 外环
+  ctx.beginPath();
+  ctx.arc(c, c, ringR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // 中缝
+  ctx.beginPath();
+  ctx.moveTo(c - ringR, c);
+  ctx.lineTo(c + ringR, c);
+  ctx.stroke();
+
+  // 中心按钮
+  ctx.beginPath();
+  ctx.arc(c, c, ringR * 0.31, 0, Math.PI * 2);
+  ctx.fillStyle = '#0b0d12';
+  ctx.fill();
+  ctx.lineWidth = lw * 0.8;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(c, c, ringR * 0.1, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(238,240,246,0.92)';
+  ctx.fill();
+
+  // 金色闪光
+  drawStar(ctx, c + size * 0.30 * k, c - size * 0.30 * k, size * 0.105 * k, size * 0.034 * k, '#ffd54a', 1);
+  drawStar(ctx, c - size * 0.27 * k, c + size * 0.28 * k, size * 0.058 * k, size * 0.019 * k, '#ffd54a', 0.85);
+  ctx.beginPath();
+  ctx.arc(c + size * 0.26 * k, c + size * 0.20 * k, size * 0.014 * k, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,213,74,0.8)';
+  ctx.fill();
+
+  return canvas;
+}
+
+function download(canvas, name) {
+  return new Promise(function (resolve) {
+    canvas.toBlob(function (blob) {
+      if (!blob) { resolve(); return; }
+      var a = document.createElement('a');
+      var url = URL.createObjectURL(blob);
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); resolve(); }, 400);
+    }, 'image/png');
+  });
+}
+
+// 预览
+(function () {
+  var preview = document.getElementById('preview');
+  var small = drawIcon(96, false);
+  var big = drawIcon(192, false);
+  small.style.width = '96px';
+  small.style.height = '96px';
+  big.style.width = '132px';
+  big.style.height = '132px';
+  preview.appendChild(small);
+  preview.appendChild(big);
+})();
+
+document.getElementById('genBtn').addEventListener('click', async function () {
+  var btn = this;
+  btn.disabled = true;
+  btn.textContent = '生成中…';
+  await download(drawIcon(192, false), 'icon-192.png');
+  await download(drawIcon(512, false), 'icon-512.png');
+  await download(drawIcon(512, true), 'icon-512-maskable.png');
+  btn.textContent = '✅ 已下载 3 个图标';
+  setTimeout(function () {
+    btn.disabled = false;
+    btn.textContent = '重新生成';
+  }, 1600);
+});
+</script>
+</body>
+</html>

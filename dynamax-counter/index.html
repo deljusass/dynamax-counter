@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="极巨大冒险计数器">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="宝可梦剑/盾 冠之雪原 极巨大冒险刷闪计数器：多目标独立计数、闪光概率计算、获取记录与统计，支持离线使用。">
+<title>✨ 极巨大冒险计数器</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root, [data-theme="dark"] {
+    --bg: #0b0d12; --card: #151822; --card-2: #1c2030; --card-3: #232838;
+    --border: #2a2f40; --text: #eef0f6; --text-2: #c5cad8; --muted: #858b9e;
+    --accent: #4a9eff; --accent-2: #6ab8ff; --accent-dark: #2d6bb3;
+    --gold: #ffd54a; --red: #e53935; --green: #4caf50;
+    --shadow: 0 8px 30px rgba(0,0,0,0.5);
+    --bg-glow: rgba(74, 158, 255, 0.08);
+  }
+  [data-theme="light"] {
+    --bg: #f4f6fa; --card: #ffffff; --card-2: #eef1f7; --card-3: #e3e8f2;
+    --border: #dde2ec; --text: #1a1e28; --text-2: #3a4152; --muted: #6b7280;
+    --accent: #2b7de9; --accent-2: #4a9eff; --accent-dark: #1a5db8;
+    --gold: #d9a800; --red: #d32f2f; --green: #2e7d32;
+    --shadow: 0 8px 30px rgba(0,0,0,0.12);
+    --bg-glow: rgba(43, 125, 233, 0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; min-height: 100dvh;
+    display: flex; justify-content: center; padding: 18px 16px 56px;
+    background-image: radial-gradient(ellipse 80% 50% at 50% 0%, var(--bg-glow), transparent 70%);
+    transition: background-color 0.3s, color 0.3s;
+    overscroll-behavior-y: contain;
+  }
+  /* 全面屏安全区（刘海 / 底部指示条） */
+  @supports (padding: env(safe-area-inset-bottom)) {
+    body {
+      padding-top: calc(18px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+      padding-left: calc(16px + env(safe-area-inset-left, 0px));
+      padding-right: calc(16px + env(safe-area-inset-right, 0px));
+    }
+  }
+  .container { width: 100%; max-width: 580px; }
+
+  /* ===== 头部 ===== */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px; gap: 10px;
+  }
+  .topbar h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.3px; }
+  .topbar h1 span { color: var(--accent); }
+  .topbar-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .icon-btn {
+    width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--text-2); background: var(--card);
+    border: 1px solid var(--border); border-radius: 12px; cursor: pointer;
+    transition: all 0.15s; font-family: inherit;
+  }
+  .icon-btn:hover { background: var(--card-2); }
+  .icon-btn:active { transform: scale(0.94); }
+
+  /* ===== 标签 ===== */
+  .tabs {
+    display: flex; gap: 6px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 6px; margin-bottom: 16px;
+  }
+  .tab {
+    flex: 1; padding: 11px 4px; font-size: 14px; font-weight: 600; color: var(--muted);
+    background: transparent; border: none; border-radius: 10px; cursor: pointer;
+    transition: all 0.2s; font-family: inherit; white-space: nowrap;
+  }
+  .tab.active { background: var(--card-2); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .tab .badge {
+    display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px;
+    font-size: 11px; line-height: 18px; color: #fff; background: var(--accent);
+    border-radius: 9px; font-weight: 700;
+  }
+
+  .page { display: none; }
+  .page.active { display: block; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 20px; margin-bottom: 14px;
+    transition: background-color 0.3s, border-color 0.3s;
+  }
+
+  /* ===== 目标卡 ===== */
+  .target-card { padding: 14px 16px; }
+  .target-current {
+    display: flex; align-items: center; gap: 14px; cursor: pointer;
+    padding: 4px; border-radius: 12px; transition: background 0.15s;
+  }
+  .target-current:hover { background: var(--card-2); }
+  .target-current:active { transform: scale(0.995); }
+  .target-mini-icon {
+    width: 48px; height: 48px; object-fit: contain; flex-shrink: 0;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+  }
+  .target-current-info { flex: 1; min-width: 0; }
+  .target-current-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+  .target-current-name { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .target-current-name .tag {
+    font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 6px;
+    background: var(--card-3); color: var(--muted);
+  }
+  .target-current-arrow { font-size: 16px; color: var(--muted); flex-shrink: 0; }
+
+  .recent-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .recent-chip {
+    display: flex; align-items: center; gap: 6px; padding: 6px 10px 6px 6px;
+    background: var(--card-2); border: 1px solid var(--border); border-radius: 20px;
+    cursor: pointer; transition: all 0.15s; font-family: inherit; font-size: 12px;
+    color: var(--text-2); max-width: 100%;
+  }
+  .recent-chip:hover { border-color: var(--accent); }
+  .recent-chip:active { transform: scale(0.96); }
+  .recent-chip img { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
+  .recent-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .recent-chip.active { border-color: var(--accent); background: rgba(74,158,255,0.1); }
+
+  /* ===== 计数卡 ===== */
+  .counter-card { text-align: center; padding: 18px 20px 24px; }
+  .target-artwork-wrap {
+    height: 150px; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 0; position: relative;
+  }
+  .target-artwork {
+    max-height: 140px; max-width: 82%; object-fit: contain;
+    filter: drop-shadow(0 10px 26px rgba(0, 0, 0, 0.45));
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .target-artwork.loading { opacity: 0; transform: scale(0.9); }
+  .target-artwork.loaded { opacity: 1; transform: scale(1); }
+  .artwork-fallback { display: none; font-size: 48px; color: var(--muted); }
+
+  .counter-label { font-size: 12px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+  .counter-number {
+    font-family: "SF Mono", "JetBrains Mono", "Fira Code", Consolas, monospace;
+    font-size: clamp(46px, 13vw, 92px); font-weight: 700; line-height: 1.05; color: var(--accent);
+    font-variant-numeric: tabular-nums; text-shadow: 0 0 40px rgba(74, 158, 255, 0.22);
+    transition: transform 0.08s ease; word-break: break-all;
+  }
+  .counter-number.bump { transform: scale(1.06); }
+
+  .last-time {
+    margin-top: 8px; font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums; line-height: 1.6; min-height: 19px;
+  }
+  .last-time b { color: var(--text-2); font-weight: 600; }
+
+  .btn-add {
+    display: block; width: 100%; margin-top: 16px; padding: 22px;
+    font-size: 20px; font-weight: 700; letter-spacing: 2px; color: #001428;
+    background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    border: none; border-radius: 16px; cursor: pointer;
+    box-shadow: 0 6px 0 var(--accent-dark), 0 10px 24px rgba(74, 158, 255, 0.25);
+    transition: transform 0.06s, box-shadow 0.06s, filter 0.15s;
+    user-select: none; touch-action: manipulation; font-family: inherit;
+  }
+  .btn-add:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--accent-dark), 0 4px 12px rgba(74, 158, 255, 0.2); }
+  .btn-add:hover { filter: brightness(1.04); }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 12px; }
+  .btn-row button {
+    flex: 1; padding: 13px; font-size: 14px; font-weight: 600; color: var(--text);
+    background: var(--card-2); border: 1px solid var(--border); border-radius: 12px;
+    cursor: pointer; transition: all 0.15s; user-select: none; touch-action: manipulation;
+    font-family: inherit;
+  }
+  .btn-row button:hover { background: var(--card-3); }
+  .btn-row button:active { transform: scale(0.97); }
+  .btn-row button.danger { color: #ff7a7a; border-color: rgba(229, 57, 53, 0.3); }
+  .btn-row button.danger:hover { background: rgba(229, 57, 53, 0.12); }
+  .btn-row button.confirm { color: #fff; background: var(--red); border-color: var(--red); animation: pulse 0.8s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+  .btn-caught {
+    display: block; width: 100%; margin-top: 10px; padding: 14px;
+    font-size: 14px; font-weight: 700; letter-spacing: 1px; color: var(--gold);
+    background: rgba(255, 213, 74, 0.08); border: 1px solid rgba(255, 213, 74, 0.35);
+    border-radius: 12px; cursor: pointer; transition: all 0.15s;
+    font-family: inherit; user-select: none; touch-action: manipulation;
+  }
+  .btn-caught:hover { background: rgba(255, 213, 74, 0.15); }
+  .btn-caught:active { transform: scale(0.98); }
+
+  /* ===== 设置 ===== */
+  .setting-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 10px 0;
+  }
+  .setting-row + .setting-row { border-top: 1px solid var(--border); }
+  .setting-row label { font-size: 14px; color: var(--text-2); flex-shrink: 0; }
+  .setting-row select {
+    flex: 1; max-width: 62%; padding: 9px 32px 9px 12px; font-size: 13px; color: var(--text);
+    background: var(--card-2); border: 1px solid var(--border); border-radius: 10px;
+    cursor: pointer; font-family: inherit; appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23858b9e' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat; background-position: right 12px center;
+  }
+  .setting-row select:focus { outline: none; border-color: var(--accent); }
+
+  /* 开关 */
+  .switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .slider {
+    position: absolute; inset: 0; background: var(--card-3); border: 1px solid var(--border);
+    border-radius: 13px; cursor: pointer; transition: all 0.2s;
+  }
+  .switch .slider::before {
+    content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px;
+    background: var(--muted); border-radius: 50%; transition: all 0.2s;
+  }
+  .switch input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .switch input:checked + .slider::before { transform: translateX(20px); background: #fff; }
+
+  /* ===== 统计 ===== */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 4px; }
+  .stat-box {
+    text-align: center; background: var(--card-2); border-radius: 12px; padding: 16px 10px;
+  }
+  .stat-box .val {
+    font-family: "SF Mono", Consolas, monospace; font-size: 24px; font-weight: 700;
+    color: var(--accent); font-variant-numeric: tabular-nums; line-height: 1.1;
+  }
+  .stat-box .val.gold { color: var(--gold); }
+  .stat-box .lbl { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 0.3px; }
+
+  .section-title {
+    font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: 0.5px;
+    margin: 4px 0 12px; display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .active-item {
+    display: flex; align-items: center; gap: 12px; padding: 10px 4px;
+    cursor: pointer; border-radius: 10px; transition: background 0.15s;
+  }
+  .active-item:hover { background: var(--card-2); }
+  .active-item + .active-item { border-top: 1px solid var(--border); }
+  .active-item img { width: 40px; height: 40px; object-fit: contain; flex-shrink: 0; }
+  .active-item-info { flex: 1; min-width: 0; }
+  .active-item-name { font-size: 14px; font-weight: 600; }
+  .active-item-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .active-item-count {
+    font-family: "SF Mono", Consolas, monospace; font-size: 15px; font-weight: 700;
+    color: var(--accent); font-variant-numeric: tabular-nums; flex-shrink: 0;
+  }
+
+  /* ===== 已获取 ===== */
+  .toolbar { display: flex; gap: 10px; margin-bottom: 14px; }
+  .search-input {
+    flex: 1; padding: 11px 14px; font-size: 14px; color: var(--text);
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    font-family: inherit;
+  }
+  .search-input:focus { outline: none; border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+
+  .caught-item { display: flex; align-items: center; gap: 14px; padding: 14px 4px; }
+  .caught-item + .caught-item { border-top: 1px solid var(--border); }
+  .caught-icon { width: 52px; height: 52px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.3)); }
+  .caught-info { flex: 1; min-width: 0; }
+  .caught-name { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+  .caught-meta { font-size: 11px; color: var(--muted); line-height: 1.55; }
+  .caught-meta .rounds { color: var(--accent); font-weight: 600; }
+  .caught-note {
+    font-size: 12px; color: var(--text-2); margin-top: 4px; font-style: italic;
+    background: var(--card-2); padding: 4px 8px; border-radius: 6px; display: inline-block;
+    max-width: 100%; word-break: break-word;
+  }
+  .caught-del {
+    flex-shrink: 0; padding: 7px 12px; font-size: 12px; color: #ff7a7a;
+    background: transparent; border: 1px solid rgba(229, 57, 53, 0.3); border-radius: 8px;
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+  }
+  .caught-del:hover { background: rgba(229, 57, 53, 0.12); }
+  .caught-del.armed { background: var(--red); color: #fff; border-color: var(--red); }
+
+  .empty-state { padding: 56px 24px; text-align: center; font-size: 13px; color: var(--muted); line-height: 2; }
+  .empty-state .big { font-size: 34px; display: block; margin-bottom: 10px; opacity: 0.5; }
+
+  .count-label { font-size: 12px; color: var(--muted); }
+
+  /* ===== 提示 ===== */
+  .hint {
+    text-align: center; font-size: 11px; color: var(--muted); line-height: 1.9; margin-top: 6px;
+    padding: 0 8px;
+  }
+  .hint kbd {
+    display: inline-block; padding: 1px 6px; font-size: 10px; font-family: inherit;
+    color: var(--text-2); background: var(--card-2); border: 1px solid var(--border);
+    border-radius: 5px; margin: 0 1px;
+  }
+
+  .note { padding: 14px 16px; font-size: 12px; color: var(--muted); line-height: 1.7; border-top: 1px solid var(--border); }
+  .note b { color: var(--text-2); }
+
+  /* ===== 弹窗 ===== */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300;
+    display: none; align-items: flex-end; justify-content: center;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  .overlay.show { display: flex; animation: fadeIn 0.18s ease; }
+  @media (min-width: 640px) { .overlay { align-items: center; } }
+
+  .modal {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0; width: 100%; max-width: 580px;
+    max-height: 90vh; display: flex; flex-direction: column;
+    animation: slideUp 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (min-width: 640px) { .modal { border-radius: 20px; } }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close {
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--muted); background: var(--card-2);
+    border: none; border-radius: 10px; cursor: pointer; font-family: inherit;
+  }
+  .modal-close:hover { background: var(--card-3); }
+
+  .modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+  .modal-foot {
+    display: flex; gap: 10px; padding: 14px 20px 20px; border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .modal-foot button {
+    flex: 1; padding: 13px; font-size: 14px; font-weight: 600; border-radius: 12px;
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+  }
+  .btn-secondary { color: var(--text); background: var(--card-2); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--card-3); }
+  .btn-primary { color: #fff; background: var(--accent); border: 1px solid var(--accent); }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-primary:active { transform: scale(0.98); }
+
+  /* 选择器 */
+  .picker-search-wrap { padding: 14px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .picker-search {
+    width: 100%; padding: 12px 14px; font-size: 15px; color: var(--text);
+    background: var(--card-2); border: 1px solid var(--border); border-radius: 12px;
+    font-family: inherit;
+  }
+  .picker-search:focus { outline: none; border-color: var(--accent); }
+  .picker-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 16px 20px;
+  }
+  @media (max-width: 360px) { .picker-grid { grid-template-columns: repeat(3, 1fr); } }
+  .picker-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px 8px;
+    background: var(--card-2); border: 2px solid transparent; border-radius: 12px;
+    cursor: pointer; transition: all 0.15s; font-family: inherit;
+  }
+  .picker-item:hover { background: var(--card-3); }
+  .picker-item:active { transform: scale(0.95); }
+  .picker-item.selected { border-color: var(--accent); background: rgba(74,158,255,0.1); }
+  .picker-item img { width: 44px; height: 44px; object-fit: contain; }
+  .picker-item .pname { font-size: 11px; font-weight: 600; color: var(--text); text-align: center; line-height: 1.2; }
+  .picker-item .pnum { font-size: 9px; color: var(--muted); }
+  .picker-empty { grid-column: 1/-1; text-align: center; padding: 40px 0; color: var(--muted); font-size: 13px; }
+
+  /* 表单 */
+  .form-group { margin-bottom: 16px; }
+  .form-group:last-child { margin-bottom: 0; }
+  .form-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 7px; letter-spacing: 0.3px; }
+  .form-input {
+    width: 100%; padding: 12px 14px; font-size: 15px; color: var(--text);
+    background: var(--card-2); border: 1px solid var(--border); border-radius: 12px;
+    font-family: inherit;
+  }
+  .form-input:focus { outline: none; border-color: var(--accent); }
+  textarea.form-input { resize: vertical; min-height: 64px; line-height: 1.5; }
+
+  .confirm-icon { width: 72px; height: 72px; object-fit: contain; display: block; margin: 0 auto 12px; }
+  .confirm-name { text-align: center; font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(16px);
+    background: var(--card-3); border: 1px solid var(--border); color: var(--text);
+    padding: 12px 22px; border-radius: 12px; font-size: 13px; font-weight: 600;
+    opacity: 0; pointer-events: none; transition: all 0.28s ease; z-index: 400;
+    box-shadow: var(--shadow); white-space: nowrap; max-width: 90vw;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.gold { color: var(--gold); border-color: rgba(255, 213, 74, 0.4); }
+
+  /* 庆祝 */
+  .celebrate {
+    position: fixed; inset: 0; pointer-events: none; z-index: 350; display: none;
+    align-items: center; justify-content: center; font-size: 34px; font-weight: 800;
+    color: var(--accent); text-shadow: 0 0 30px rgba(74, 158, 255, 0.8);
+    text-align: center; padding: 20px;
+  }
+  .celebrate.show { display: flex; animation: celebrateAnim 1.4s ease forwards; }
+  @keyframes celebrateAnim {
+    0% { opacity: 0; transform: scale(0.5); } 25% { opacity: 1; transform: scale(1.12); }
+    55% { transform: scale(1); } 100% { opacity: 0; transform: scale(1.06); }
+  }
+
+  @media (max-width: 400px) {
+    .setting-row { flex-direction: column; align-items: stretch; }
+    .setting-row select { max-width: 100%; }
+    .target-artwork-wrap { height: 120px; }
+    .target-artwork { max-height: 110px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topbar">
+    <div>
+      <h1>✨ 极巨大冒险<span>计数器</span></h1>
+      <div class="topbar-sub">剑/盾 · 冠之雪原 · 每一轮都是一次机会</div>
+    </div>
+    <button class="icon-btn" id="themeBtn" title="切换主题">🌙</button>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="counter">计数器</button>
+    <button class="tab" data-tab="caught">已获取<span class="badge" id="caughtBadge" style="display:none">0</span></button>
+    <button class="tab" data-tab="stats">统计</button>
+  </nav>
+
+  <!-- ============ 计数器 ============ -->
+  <div class="page active" id="page-counter">
+
+    <div class="card target-card">
+      <div class="target-current" id="targetCurrent">
+        <img class="target-mini-icon" id="targetMiniIcon" alt="">
+        <div class="target-current-info">
+          <div class="target-current-label">正在刷</div>
+          <div class="target-current-name" id="targetCurrentName">烈空坐</div>
+        </div>
+        <span class="target-current-arrow">▾</span>
+      </div>
+      <div class="recent-row" id="recentRow"></div>
+    </div>
+
+    <div class="card counter-card">
+      <div class="target-artwork-wrap">
+        <img class="target-artwork loading" id="targetArtwork" alt="" referrerpolicy="no-referrer">
+        <div class="artwork-fallback" id="artworkFallback">?</div>
+      </div>
+      <div class="counter-label">已完成冒险轮次</div>
+      <div class="counter-number" id="countDisplay">0</div>
+      <div class="last-time" id="lastTime">尚未开始计数</div>
+      <button class="btn-add" id="addBtn">+1 完成一轮</button>
+      <div class="btn-row">
+        <button id="subBtn">−1</button>
+        <button class="danger" id="resetBtn">重置</button>
+      </div>
+      <button class="btn-caught" id="markCaughtBtn">✨ 标记为已获取</button>
+    </div>
+
+    <div class="card">
+      <div class="setting-row">
+        <label for="charmSelect">闪耀护符</label>
+        <select id="charmSelect">
+          <option value="charm">有闪耀护符（1/100）</option>
+          <option value="noCharm">无闪耀护符（1/300）</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>计数音效</label>
+        <label class="switch"><input type="checkbox" id="soundToggle"><span class="slider"></span></label>
+      </div>
+      <div class="setting-row">
+        <label>震动反馈</label>
+        <label class="switch"><input type="checkbox" id="vibrateToggle"><span class="slider"></span></label>
+      </div>
+      <div class="setting-row">
+        <label>里程碑提示</label>
+        <label class="switch"><input type="checkbox" id="milestoneToggle"><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div class="stats-grid" style="padding:20px;">
+        <div class="stat-box">
+          <div class="val" id="oddsDisplay">1/100</div>
+          <div class="lbl">单只闪光概率</div>
+        </div>
+        <div class="stat-box">
+          <div class="val" id="cumDisplay">0%</div>
+          <div class="lbl">累积概率</div>
+        </div>
+      </div>
+      <div style="padding:0 20px 20px;">
+        <div style="height:10px; background:var(--card-2); border-radius:6px; overflow:hidden;">
+          <div id="progressFill" style="height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius:6px; transition:width 0.4s cubic-bezier(0.22,1,0.36,1); box-shadow:0 0 12px rgba(74,158,255,0.5);"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">
+          <span>50% 需 <b id="need50" style="color:var(--text-2);">—</b> 轮</span>
+          <span>90% 需 <b id="need90" style="color:var(--text-2);">—</b> 轮</span>
+        </div>
+      </div>
+      <div class="note">
+        <b>机制提醒：</b>每轮从 4 只中选 1 只带走，<b>每一只独立判定闪光</b>。战斗时不闪也<b>必须丢球捕获</b>，才能在结算时确认是否闪光。
+      </div>
+    </div>
+
+    <div class="hint">
+      <kbd>空格</kbd>/<kbd>↑</kbd> +1 · <kbd>⌫</kbd>/<kbd>↓</kbd> −1 · <kbd>R</kbd> 重置 · <kbd>C</kbd> 庆祝 · <kbd>M</kbd> 标记获取<br>
+      长按 +1 / −1 可连续计数 · 数据自动保存在本机
+    </div>
+  </div>
+
+  <!-- ============ 已获取 ============ -->
+  <div class="page" id="page-caught">
+    <div class="toolbar">
+      <input type="text" class="search-input" id="caughtSearch" placeholder="搜索宝可梦名或备注…">
+    </div>
+    <div class="card" style="padding:4px 16px;">
+      <div id="caughtList"></div>
+    </div>
+    <div class="hint">
+      数据保存在浏览器本地 · 可在统计页导出备份
+    </div>
+  </div>
+
+  <!-- ============ 统计 ============ -->
+  <div class="page" id="page-stats">
+    <div class="card">
+      <div class="section-title">总览</div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="val gold" id="stTotal">0</div><div class="lbl">已获取总数</div></div>
+        <div class="stat-box"><div class="val" id="stRounds">0</div><div class="lbl">累计消耗轮次</div></div>
+        <div class="stat-box"><div class="val" id="stAvg">0</div><div class="lbl">平均轮次 / 只</div></div>
+        <div class="stat-box"><div class="val" id="stActive">0</div><div class="lbl">进行中的目标</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">最欧 / 最非</div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="val" id="stFastestVal">—</div>
+          <div class="lbl" id="stFastestName">最快获取</div>
+        </div>
+        <div class="stat-box">
+          <div class="val" id="stSlowestVal">—</div>
+          <div class="lbl" id="stSlowestName">最慢获取</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">正在进行中 <span class="count-label" id="activeCount"></span></div>
+      <div id="activeList"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">已获取排行榜</div>
+      <div id="rankingList"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">数据管理</div>
+      <div class="btn-row" style="margin-top:0;">
+        <button id="exportBtn">📤 导出备份</button>
+        <button id="importBtn">📥 导入备份</button>
+      </div>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
+      <div class="hint" style="margin-top:14px; text-align:left; line-height:1.7;">
+        导出的 JSON 文件包含所有计数、获取记录和设置。换设备时导入即可恢复。清除浏览器数据前记得备份。
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+<!-- 庆祝 -->
+<div class="celebrate" id="celebrate">✨ 出闪了！✨</div>
+
+<!-- 通用弹窗 -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="modalTitle"></span>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     数据
+     ============================================================ */
+  const TARGETS = [
+    { id: 144, cn: '急冻鸟', game: 'both' },     { id: 145, cn: '闪电鸟', game: 'both' },
+    { id: 146, cn: '火焰鸟', game: 'both' },     { id: 150, cn: '超梦', game: 'both' },
+    { id: 243, cn: '雷公', game: 'both' },       { id: 244, cn: '炎帝', game: 'both' },
+    { id: 245, cn: '水君', game: 'both' },       { id: 249, cn: '洛奇亚', game: 'shield' },
+    { id: 250, cn: '凤王', game: 'sword' },      { id: 380, cn: '拉帝亚斯', game: 'shield' },
+    { id: 381, cn: '拉帝欧斯', game: 'sword' },  { id: 382, cn: '盖欧卡', game: 'shield' },
+    { id: 383, cn: '固拉多', game: 'sword' },    { id: 384, cn: '烈空坐', game: 'both' },
+    { id: 480, cn: '由克希', game: 'both' },     { id: 481, cn: '艾姆利多', game: 'both' },
+    { id: 482, cn: '亚克诺姆', game: 'both' },   { id: 483, cn: '帝牙卢卡', game: 'sword' },
+    { id: 484, cn: '帕路奇亚', game: 'shield' }, { id: 485, cn: '席多蓝恩', game: 'both' },
+    { id: 487, cn: '骑拉帝纳', game: 'both' },   { id: 488, cn: '克雷色利亚', game: 'both' },
+    { id: 641, cn: '龙卷云', game: 'sword' },    { id: 642, cn: '雷电云', game: 'shield' },
+    { id: 643, cn: '莱希拉姆', game: 'sword' },  { id: 644, cn: '捷克罗姆', game: 'shield' },
+    { id: 645, cn: '土地云', game: 'both' },     { id: 646, cn: '酋雷姆', game: 'both' },
+    { id: 716, cn: '哲尔尼亚斯', game: 'sword' },{ id: 717, cn: '伊裴尔塔尔', game: 'shield' },
+    { id: 718, cn: '基格尔德', game: 'both' },   { id: 785, cn: '卡璞・鸣鸣', game: 'both' },
+    { id: 786, cn: '卡璞・蝶蝶', game: 'both' }, { id: 787, cn: '卡璞・哞哞', game: 'both' },
+    { id: 788, cn: '卡璞・鳍鳍', game: 'both' }, { id: 791, cn: '索尔迦雷欧', game: 'sword' },
+    { id: 792, cn: '露奈雅拉', game: 'shield' }, { id: 793, cn: '虚吾伊德', game: 'both' },
+    { id: 794, cn: '爆肌蚊', game: 'both' },     { id: 795, cn: '费洛美螂', game: 'both' },
+    { id: 796, cn: '电束木', game: 'both' },     { id: 797, cn: '铁火辉夜', game: 'both' },
+    { id: 798, cn: '纸御剑', game: 'both' },     { id: 799, cn: '恶食大王', game: 'both' },
+    { id: 800, cn: '奈克洛兹玛', game: 'both' }, { id: 805, cn: '垒磊石', game: 'both' },
+    { id: 806, cn: '砰头小丑', game: 'both' }
+  ];
+
+  const ART_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
+  const RATES = { charm: 1 / 100, noCharm: 1 / 300 };
+  const STORAGE_KEY = 'dynamax_v3';
+  const BACKUP_KEY = 'dynamax_v3_backup';
+  const MILES = [0.25, 0.5, 0.75, 0.9, 0.99];
+
+  /* ============================================================
+     状态
+     ============================================================ */
+  const defaultState = function () {
+    return {
+      v: 3,
+      theme: 'dark',
+      charm: 'charm',
+      targetId: 384,
+      recent: [384],
+      counts: {},
+      caught: [],
+      settings: { sound: false, vibrate: true, milestone: true }
+    };
+  };
+  let state = defaultState();
+  let currentTab = 'counter';
+  let resetArmed = false, resetTimer = null;
+  let holdTimer = null, holdInterval = null;
+  let saveTimer = null;
+
+  /* ============================================================
+     工具
+     ============================================================ */
+  function $(id) { return document.getElementById(id); }
+  function findTarget(id) { return TARGETS.find(function (t) { return t.id === Number(id); }); }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function formatShort(ts) {
+    const d = new Date(ts);
+    return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function formatFull(ts) {
+    const d = new Date(ts);
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+           ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function timeAgo(ts) {
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 5) return '刚刚';
+    if (s < 60) return s + ' 秒前';
+    const m = Math.floor(s / 60);
+    if (m < 60) return m + ' 分钟前';
+    const h = Math.floor(m / 60);
+    if (h < 24) return h + ' 小时前';
+    const d = Math.floor(h / 24);
+    if (d < 30) return d + ' 天前';
+    return formatShort(ts);
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* ============================================================
+     音效
+     ============================================================ */
+  let audioCtx = null;
+  function initAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+  function beep(freq, dur, type, vol) {
+    if (!state.settings.sound) return;
+    initAudio();
+    if (!audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(vol || 0.06, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + dur);
+    } catch (e) {}
+  }
+  function soundTap() { beep(920, 0.05, 'sine', 0.05); }
+  function soundMilestone() {
+    beep(660, 0.1, 'triangle', 0.09);
+    setTimeout(function () { beep(990, 0.16, 'triangle', 0.09); }, 90);
+  }
+  function soundShiny() {
+    [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) {
+      setTimeout(function () { beep(f, 0.22, 'triangle', 0.1); }, i * 80);
+    });
+  }
+
+  function vibrate(pattern) {
+    if (!state.settings.vibrate) return;
+    if (navigator.vibrate) { try { navigator.vibrate(pattern || 8); } catch (e) {} }
+  }
+
+  /* ============================================================
+     存储（主 + 备份）
+     ============================================================ */
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      try {
+        const data = JSON.stringify(state);
+        localStorage.setItem(STORAGE_KEY, data);
+        localStorage.setItem(BACKUP_KEY, data);
+      } catch (e) {}
+    }, 150);
+  }
+
+  function migrateOld(d) {
+    const s = defaultState();
+    if (!d || typeof d !== 'object') return s;
+    if (d.charm && RATES[d.charm]) s.charm = d.charm;
+    if (d.targetId && findTarget(d.targetId)) s.targetId = Number(d.targetId);
+    if (d.counts && typeof d.counts === 'object') {
+      Object.keys(d.counts).forEach(function (k) {
+        const v = d.counts[k];
+        if (v && typeof v.count === 'number') {
+          s.counts[k] = { count: v.count, lastTime: Number(v.lastTime) || 0 };
+        }
+      });
+    }
+    if (Array.isArray(d.caught)) {
+      s.caught = d.caught.map(function (c) {
+        return {
+          uid: c.uid || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)),
+          id: c.id, rounds: Number(c.rounds) || 0,
+          charm: c.charm || 'charm', date: Number(c.date) || Date.now(),
+          note: c.note || ''
+        };
+      });
+    }
+    // 旧版顶层 count
+    if (typeof d.count === 'number' && !d.counts) {
+      s.counts[Number(d.targetId) || 384] = { count: d.count, lastTime: Number(d.lastTime) || 0 };
+    }
+    return s;
+  }
+
+  function load() {
+    let raw = null;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    if (!raw) { try { raw = localStorage.getItem(BACKUP_KEY); } catch (e) {} }
+    if (!raw) { state = defaultState(); return; }
+    try {
+      const d = JSON.parse(raw);
+      state = migrateOld(d);
+      if (d && d.v === 3) {
+        // v3 直接使用结构化字段
+        if (d.theme) state.theme = d.theme;
+        if (Array.isArray(d.recent)) state.recent = d.recent.filter(function (id) { return !!findTarget(id); });
+        if (d.settings && typeof d.settings === 'object') {
+          state.settings = {
+            sound: !!d.settings.sound,
+            vibrate: d.settings.vibrate !== false,
+            milestone: d.settings.milestone !== false
+          };
+        }
+      }
+    } catch (e) { state = defaultState(); }
+  }
+
+  /* ============================================================
+     主题
+     ============================================================ */
+  function applyTheme() {
+    let t = state.theme;
+    if (t === 'auto') {
+      t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', t === 'light' ? '#f4f6fa' : '#0b0d12');
+    const btn = $('themeBtn');
+    if (btn) btn.textContent = state.theme === 'light' ? '☀️' : (state.theme === 'auto' ? '🌗' : '🌙');
+  }
+
+  function cycleTheme() {
+    state.theme = state.theme === 'dark' ? 'light' : (state.theme === 'light' ? 'auto' : 'dark');
+    applyTheme(); save();
+    const names = { dark: '深色模式', light: '浅色模式', auto: '跟随系统' };
+    toast(names[state.theme]);
+  }
+
+  /* ============================================================
+     计数数据
+     ============================================================ */
+  function getEntry(id) {
+    if (!state.counts[id] || typeof state.counts[id].count !== 'number') {
+      state.counts[id] = { count: 0, lastTime: 0 };
+    }
+    return state.counts[id];
+  }
+
+  function currentRate() { return RATES[state.charm]; }
+  function cumulative(p, n) { return n <= 0 ? 0 : 1 - Math.pow(1 - p, n); }
+  function encountersFor(p, target) {
+    if (p <= 0 || target <= 0) return 0;
+    if (target >= 1) return Infinity;
+    return Math.ceil(Math.log(1 - target) / Math.log(1 - p));
+  }
+  function formatPercent(v) {
+    if (v <= 0) return '0%';
+    const pct = v * 100;
+    if (pct >= 10) return pct.toFixed(1) + '%';
+    if (pct >= 1) return pct.toFixed(2) + '%';
+    if (pct >= 0.01) return pct.toFixed(3) + '%';
+    return pct.toFixed(5) + '%';
+  }
+
+  /* ============================================================
+     图标
+     ============================================================ */
+  const iconCache = {};
+  function iconUrl(id) { return ART_BASE + id + '.png'; }
+
+  function preloadIcons() {
+    TARGETS.forEach(function (t) {
+      if (!iconCache[t.id]) {
+        const img = new Image();
+        img.src = iconUrl(t.id);
+        iconCache[t.id] = img;
+      }
+    });
+  }
+
+  /* ============================================================
+     渲染：计数器
+     ============================================================ */
+  function renderTargetHeader() {
+    const p = findTarget(state.targetId);
+    if (!p) return;
+    const mini = $('targetMiniIcon');
+    mini.src = iconUrl(p.id);
+    mini.alt = p.cn;
+    mini.onerror = function () { mini.style.visibility = 'hidden'; };
+    mini.onload = function () { mini.style.visibility = 'visible'; };
+
+    let nameHtml = esc(p.cn);
+    if (p.game === 'sword') nameHtml += '<span class="tag">剑限定</span>';
+    else if (p.game === 'shield') nameHtml += '<span class="tag">盾限定</span>';
+    $('targetCurrentName').innerHTML = nameHtml;
+
+    // 最近 chips
+    const row = $('recentRow');
+    row.innerHTML = '';
+    const recent = (state.recent || []).filter(function (id) {
+      return findTarget(id) && id !== state.targetId;
+    }).slice(0, 4);
+    recent.forEach(function (id) {
+      const t = findTarget(id);
+      const btn = document.createElement('button');
+      btn.className = 'recent-chip';
+      btn.innerHTML = '<img src="' + iconUrl(id) + '" alt="" referrerpolicy="no-referrer"><span>' + esc(t.cn) + '</span>';
+      btn.addEventListener('click', function () { selectTarget(id); });
+      row.appendChild(btn);
+    });
+    if (!recent.length) {
+      row.style.display = 'none';
+    } else {
+      row.style.display = 'flex';
+    }
+  }
+
+  function renderArtwork() {
+    const p = findTarget(state.targetId);
+    if (!p) return;
+    const img = $('targetArtwork');
+    const fb = $('artworkFallback');
+    img.classList.add('loading');
+    img.classList.remove('loaded');
+    fb.style.display = 'none';
+    img.style.display = 'block';
+    img.onload = function () { img.classList.remove('loading'); img.classList.add('loaded'); };
+    img.onerror = function () { img.style.display = 'none'; fb.style.display = 'block'; };
+    img.src = iconUrl(p.id);
+    img.alt = p.cn;
+  }
+
+  function renderLastTime() {
+    const entry = getEntry(state.targetId);
+    if (!entry.lastTime) {
+      $('lastTime').textContent = '尚未开始计数';
+      return;
+    }
+    $('lastTime').innerHTML = '上次计数 <b>' + formatShort(entry.lastTime) + '</b> · ' + timeAgo(entry.lastTime);
+  }
+
+  function renderCounter() {
+    const entry = getEntry(state.targetId);
+    const p = currentRate();
+    $('countDisplay').textContent = entry.count.toLocaleString('en-US');
+    renderLastTime();
+    $('oddsDisplay').textContent = '1/' + Math.round(1 / p).toLocaleString('en-US');
+    const cum = cumulative(p, entry.count);
+    $('cumDisplay').textContent = formatPercent(cum);
+    $('cumDisplay').style.color = cum >= 0.5 ? 'var(--gold)' : 'var(--accent)';
+    $('progressFill').style.width = Math.min(cum * 100, 100).toFixed(2) + '%';
+    $('need50').textContent = encountersFor(p, 0.5).toLocaleString('en-US');
+    $('need90').textContent = encountersFor(p, 0.9).toLocaleString('en-US');
+    renderTargetHeader();
+  }
+
+  /* ============================================================
+     渲染：已获取
+     ============================================================ */
+  function renderCaught() {
+    const total = state.caught.length;
+    if (total > 0) {
+      $('caughtBadge').textContent = total;
+      $('caughtBadge').style.display = 'inline-block';
+    } else {
+      $('caughtBadge').style.display = 'none';
+    }
+
+    const q = ($('caughtSearch').value || '').trim().toLowerCase();
+    let list = state.caught.slice().sort(function (a, b) { return b.date - a.date; });
+    if (q) {
+      list = list.filter(function (c) {
+        const p = findTarget(c.id);
+        const name = p ? p.cn : '';
+        return (name.toLowerCase().indexOf(q) !== -1) ||
+               (String(c.note || '').toLowerCase().indexOf(q) !== -1) ||
+               (String(c.rounds).indexOf(q) !== -1);
+      });
+    }
+
+    const el = $('caughtList');
+    if (!list.length) {
+      el.innerHTML =
+        '<div class="empty-state"><span class="big">' + (q ? '🔍' : '📭') + '</span>' +
+        (q ? '没有匹配的记录' : '还没有记录<br>刷到闪光后，在计数器页点「标记为已获取」') +
+        '</div>';
+      return;
+    }
+
+    el.innerHTML = list.map(function (c) {
+      const p = findTarget(c.id);
+      const name = p ? p.cn : ('#' + c.id);
+      const charmTag = c.charm === 'charm' ? '有护符' : '无护符';
+      const noteHtml = c.note ? '<div class="caught-note">' + esc(c.note) + '</div>' : '';
+      return '' +
+        '<div class="caught-item">' +
+          '<img class="caught-icon" src="' + iconUrl(c.id) + '" alt="' + esc(name) + '"' +
+               ' loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility=\'hidden\'">' +
+          '<div class="caught-info">' +
+            '<div class="caught-name">' + esc(name) + '</div>' +
+            '<div class="caught-meta">' +
+              '<span class="rounds">' + Number(c.rounds || 0).toLocaleString('en-US') + ' 轮</span>' +
+              ' · ' + charmTag + ' · ' + formatFull(c.date) +
+            '</div>' +
+            noteHtml +
+          '</div>' +
+          '<button class="caught-del" data-uid="' + c.uid + '">删除</button>' +
+        '</div>';
+    }).join('');
+  }
+
+  /* ============================================================
+     渲染：统计
+     ============================================================ */
+  function renderStats() {
+    const caught = state.caught;
+    const total = caught.length;
+    const totalRounds = caught.reduce(function (s, c) { return s + (Number(c.rounds) || 0); }, 0);
+    const avg = total ? Math.round(totalRounds / total) : 0;
+
+    const activeEntries = Object.keys(state.counts).map(function (k) {
+      return { id: Number(k), count: state.counts[k].count || 0, lastTime: state.counts[k].lastTime || 0 };
+    }).filter(function (c) { return c.count > 0; })
+      .sort(function (a, b) { return b.count - a.count; });
+
+    $('stTotal').textContent = total;
+    $('stRounds').textContent = totalRounds.toLocaleString('en-US');
+    $('stAvg').textContent = avg.toLocaleString('en-US');
+    $('stActive').textContent = activeEntries.length;
+
+    // 最欧 / 最非
+    if (total) {
+      let fast = caught[0], slow = caught[0];
+      caught.forEach(function (c) {
+        if ((c.rounds || 0) < (fast.rounds || 0)) fast = c;
+        if ((c.rounds || 0) > (slow.rounds || 0)) slow = c;
+      });
+      const fName = findTarget(fast.id);
+      const sName = findTarget(slow.id);
+      $('stFastestVal').textContent = (fast.rounds || 0).toLocaleString('en-US');
+      $('stFastestName').textContent = '最快 · ' + (fName ? fName.cn : '#' + fast.id);
+      $('stSlowestVal').textContent = (slow.rounds || 0).toLocaleString('en-US');
+      $('stSlowestName').textContent = '最慢 · ' + (sName ? sName.cn : '#' + slow.id);
+    } else {
+      $('stFastestVal').textContent = '—';
+      $('stFastestName').textContent = '最快获取';
+      $('stSlowestVal').textContent = '—';
+      $('stSlowestName').textContent = '最慢获取';
+    }
+
+    // 进行中
+    $('activeCount').textContent = activeEntries.length ? activeEntries.length + ' 只' : '';
+    const activeEl = $('activeList');
+    if (!activeEntries.length) {
+      activeEl.innerHTML = '<div class="empty-state" style="padding:24px 0; font-size:12px;">暂无进行中的目标</div>';
+    } else {
+      activeEl.innerHTML = activeEntries.map(function (c) {
+        const p = findTarget(c.id);
+        const name = p ? p.cn : ('#' + c.id);
+        return '' +
+          '<div class="active-item" data-id="' + c.id + '">' +
+            '<img src="' + iconUrl(c.id) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility=\'hidden\'">' +
+            '<div class="active-item-info">' +
+              '<div class="active-item-name">' + esc(name) + '</div>' +
+              '<div class="active-item-sub">上次 ' + (c.lastTime ? timeAgo(c.lastTime) : '—') + '</div>' +
+            '</div>' +
+            '<div class="active-item-count">' + c.count.toLocaleString('en-US') + ' 轮</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    // 排行榜（按宝可梦分组）
+    const byPoke = {};
+    caught.forEach(function (c) {
+      if (!byPoke[c.id]) byPoke[c.id] = { count: 0, rounds: 0 };
+      byPoke[c.id].count++;
+      byPoke[c.id].rounds += Number(c.rounds) || 0;
+    });
+    const ranking = Object.keys(byPoke).map(function (k) {
+      return { id: Number(k), count: byPoke[k].count, rounds: byPoke[k].rounds };
+    }).sort(function (a, b) { return b.count - a.count || a.rounds - b.rounds; });
+
+    const rankEl = $('rankingList');
+    if (!ranking.length) {
+      rankEl.innerHTML = '<div class="empty-state" style="padding:24px 0; font-size:12px;">暂无数据</div>';
+    } else {
+      rankEl.innerHTML = ranking.map(function (r) {
+        const p = findTarget(r.id);
+        const name = p ? p.cn : ('#' + r.id);
+        return '' +
+          '<div class="active-item">' +
+            '<img src="' + iconUrl(r.id) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility=\'hidden\'">' +
+            '<div class="active-item-info">' +
+              '<div class="active-item-name">' + esc(name) + '</div>' +
+              '<div class="active-item-sub">共 ' + r.rounds.toLocaleString('en-US') + ' 轮</div>' +
+            '</div>' +
+            '<div class="active-item-count">×' + r.count + '</div>' +
+          '</div>';
+      }).join('');
+    }
+  }
+
+  /* ============================================================
+     渲染：全部
+     ============================================================ */
+  function renderAll() {
+    renderCounter();
+    renderCaught();
+    renderStats();
+  }
+
+  /* ============================================================
+     计数动作
+     ============================================================ */
+  function bumpAnim() {
+    const el = $('countDisplay');
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+  }
+
+  function checkMilestones(oldCount, newCount, p) {
+    if (!state.settings.milestone) return;
+    if (newCount <= oldCount) return;
+    // 长按可能一次跨过多个档位，这里取跨过的最高档
+    let reached = null;
+    MILES.forEach(function (r) {
+      const need = encountersFor(p, r);
+      if (oldCount < need && newCount >= need) reached = r;
+    });
+    if (reached != null) {
+      toast('🎯 累积概率已达到 ' + Math.round(reached * 100) + '%', true);
+      soundMilestone();
+    }
+  }
+
+  function add(silent) {
+    disarmReset();
+    const entry = getEntry(state.targetId);
+    const old = entry.count;
+    entry.count++;
+    entry.lastTime = Date.now();
+    renderCounter(); save(); bumpAnim();
+    if (!silent) { vibrate(); soundTap(); }
+    checkMilestones(old, entry.count, currentRate());
+  }
+
+  function sub() {
+    disarmReset();
+    const entry = getEntry(state.targetId);
+    if (entry.count <= 0) return;
+    entry.count--;
+    entry.lastTime = Date.now();
+    renderCounter(); save();
+  }
+
+  function disarmReset() {
+    resetArmed = false;
+    const btn = $('resetBtn');
+    btn.textContent = '重置';
+    btn.classList.remove('confirm');
+    if (resetTimer) { clearTimeout(resetTimer); resetTimer = null; }
+  }
+
+  function reset() {
+    if (!resetArmed) {
+      resetArmed = true;
+      const btn = $('resetBtn');
+      btn.textContent = '确认重置？';
+      btn.classList.add('confirm');
+      resetTimer = setTimeout(disarmReset, 3000);
+      return;
+    }
+    const entry = getEntry(state.targetId);
+    entry.count = 0;
+    entry.lastTime = 0;
+    renderCounter(); save(); disarmReset();
+  }
+
+  /* ============================================================
+     长按连续计数
+     ============================================================ */
+  function startHold(fn) {
+    fn(false);
+    holdTimer = setTimeout(function () {
+      holdInterval = setInterval(function () { fn(true); }, 70);
+    }, 420);
+  }
+  function stopHold() {
+    clearTimeout(holdTimer);
+    clearInterval(holdInterval);
+    holdTimer = holdInterval = null;
+  }
+
+  /* ============================================================
+     Toast / 庆祝
+     ============================================================ */
+  let toastTimer = null;
+  function toast(msg, gold) {
+    const el = $('toast');
+    el.textContent = msg;
+    el.classList.toggle('gold', !!gold);
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2200);
+  }
+
+  function showCelebrate() {
+    const el = $('celebrate');
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
+    soundShiny();
+    vibrate([20, 40, 20, 40, 80]);
+    setTimeout(function () { el.classList.remove('show'); }, 1400);
+  }
+
+  /* ============================================================
+     弹窗框架
+     ============================================================ */
+  let modalOnClose = null;
+  function openModal(opts) {
+    $('modalTitle').textContent = opts.title || '';
+    $('modalBody').innerHTML = opts.body || '';
+    $('modalFoot').innerHTML = opts.foot || '';
+    $('overlay').classList.add('show');
+    modalOnClose = opts.onClose || null;
+    if (opts.onOpen) opts.onOpen();
+  }
+  function closeModal() {
+    $('overlay').classList.remove('show');
+    if (modalOnClose) { try { modalOnClose(); } catch (e) {} modalOnClose = null; }
+  }
+
+  /* ============================================================
+     选择器
+     ============================================================ */
+  function openPicker() {
+    const sorted = TARGETS.slice().sort(function (a, b) { return a.id - b.id; });
+    let gridHtml = sorted.map(function (p) {
+      const selected = p.id === state.targetId ? ' selected' : '';
+      return '<button class="picker-item' + selected + '" data-id="' + p.id + '">' +
+        '<img src="' + iconUrl(p.id) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility=\'hidden\'">' +
+        '<span class="pname">' + esc(p.cn) + '</span>' +
+        '<span class="pnum">#' + p.id + '</span>' +
+      '</button>';
+    }).join('');
+
+    openModal({
+      title: '选择目标宝可梦',
+      body: '<div class="picker-search-wrap" style="padding:0 0 12px; border-bottom:none;">' +
+              '<input class="picker-search" id="pickerSearch" placeholder="搜索中文名或图鉴编号…" autocomplete="off">' +
+            '</div>' +
+            '<div class="picker-grid" id="pickerGrid">' + gridHtml + '</div>',
+      foot: '<button class="btn-secondary" id="pickerCancel">取消</button>',
+      onOpen: function () {
+        preloadIcons();
+        const search = $('pickerSearch');
+        const grid = $('pickerGrid');
+        const items = Array.prototype.slice.call(grid.querySelectorAll('.picker-item'));
+
+        search.focus();
+        search.addEventListener('input', function () {
+          const q = search.value.trim().toLowerCase();
+          let any = false;
+          items.forEach(function (it) {
+            const id = Number(it.dataset.id);
+            const p = findTarget(id);
+            const hit = !q || String(id).indexOf(q) !== -1 || p.cn.toLowerCase().indexOf(q) !== -1;
+            it.style.display = hit ? '' : 'none';
+            if (hit) any = true;
+          });
+          let empty = grid.querySelector('.picker-empty');
+          if (!any && !empty) {
+            empty = document.createElement('div');
+            empty.className = 'picker-empty';
+            empty.textContent = '没有找到匹配的宝可梦';
+            grid.appendChild(empty);
+          } else if (any && empty) {
+            empty.remove();
+          }
+        });
+
+        grid.addEventListener('click', function (e) {
+          const item = e.target.closest('.picker-item');
+          if (!item) return;
+          selectTarget(Number(item.dataset.id));
+          closeModal();
+        });
+
+        $('pickerCancel').addEventListener('click', closeModal);
+      }
+    });
+  }
+
+  function selectTarget(id) {
+    if (!findTarget(id)) return;
+    if (state.targetId === id) return;
+    state.targetId = id;
+    // 更新最近列表
+    state.recent = [id].concat((state.recent || []).filter(function (r) { return r !== id; })).slice(0, 5);
+    disarmReset();
+    renderArtwork();
+    renderCounter();
+    save();
+  }
+
+  /* ============================================================
+     标记为已获取
+     ============================================================ */
+  function openMarkCaught() {
+    const entry = getEntry(state.targetId);
+    const p = findTarget(state.targetId);
+    if (!p) return;
+
+    openModal({
+      title: '标记为已获取',
+      body:
+        '<img class="confirm-icon" src="' + iconUrl(p.id) + '" alt="" referrerpolicy="no-referrer">' +
+        '<div class="confirm-name">' + esc(p.cn) + '</div>' +
+        '<div class="form-group">' +
+          '<label class="form-label">消耗轮次（可修正）</label>' +
+          '<input class="form-input" id="markRounds" type="number" min="0" value="' + entry.count + '">' +
+        '</div>' +
+        '<div class="form-group">' +
+          '<label class="form-label">备注（可选）</label>' +
+          '<textarea class="form-input" id="markNote" placeholder="例如：第 3 只出闪 / 路线很顺 / 抓到了…"></textarea>' +
+        '</div>' +
+        '<div class="hint" style="text-align:left; margin-top:4px;">确认后该宝可梦的计数会重置为 0，并加入「已获取」列表。</div>',
+      foot: '<button class="btn-secondary" id="markCancel">取消</button>' +
+            '<button class="btn-primary" id="markConfirm">确认获取</button>',
+      onOpen: function () {
+        $('markCancel').addEventListener('click', closeModal);
+        $('markConfirm').addEventListener('click', function () {
+          const rounds = Math.max(0, parseInt($('markRounds').value, 10) || 0);
+          const note = ($('markNote').value || '').trim().slice(0, 200);
+          state.caught.push({
+            uid: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+            id: state.targetId,
+            rounds: rounds,
+            charm: state.charm,
+            date: Date.now(),
+            note: note
+          });
+          const e2 = getEntry(state.targetId);
+          e2.count = 0;
+          e2.lastTime = 0;
+          save();
+          renderAll();
+          closeModal();
+          switchTab('caught');
+          toast('✨ 已加入获取列表', true);
+        });
+      }
+    });
+  }
+
+  /* ============================================================
+     删除记录
+     ============================================================ */
+  function bindCaughtList() {
+    $('caughtList').addEventListener('click', function (e) {
+      const btn = e.target.closest('.caught-del');
+      if (!btn) return;
+      const uid = btn.dataset.uid;
+
+      if (!btn.classList.contains('armed')) {
+        $('caughtList').querySelectorAll('.caught-del.armed').forEach(function (b) {
+          b.classList.remove('armed');
+          b.textContent = '删除';
+          clearTimeout(b._t);
+        });
+        btn.classList.add('armed');
+        btn.textContent = '确认？';
+        btn._t = setTimeout(function () {
+          btn.classList.remove('armed');
+          btn.textContent = '删除';
+        }, 3000);
+        return;
+      }
+      clearTimeout(btn._t);
+      state.caught = state.caught.filter(function (c) { return c.uid !== uid; });
+      save();
+      renderAll();
+      toast('已删除该记录');
+    });
+  }
+
+  /* ============================================================
+     标签切换
+     ============================================================ */
+  function switchTab(name) {
+    currentTab = name;
+    document.querySelectorAll('.tab').forEach(function (t) {
+      t.classList.toggle('active', t.dataset.tab === name);
+    });
+    $('page-counter').classList.toggle('active', name === 'counter');
+    $('page-caught').classList.toggle('active', name === 'caught');
+    $('page-stats').classList.toggle('active', name === 'stats');
+    if (name === 'caught') renderCaught();
+    if (name === 'stats') renderStats();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ============================================================
+     导出 / 导入
+     ============================================================ */
+  function exportData() {
+    try {
+      const data = JSON.stringify(state, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const d = new Date();
+      const stamp = d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes());
+      a.href = url;
+      a.download = '极巨大冒险计数器_' + stamp + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+      toast('已导出备份文件');
+    } catch (e) {
+      toast('导出失败：' + e.message);
+    }
+  }
+
+  function importData(file) {
+    const reader = new FileReader();
+    reader.onload = function () {
+      try {
+        const d = JSON.parse(reader.result);
+        if (!d || typeof d !== 'object') throw new Error('文件格式不正确');
+        if (!window.confirm('导入将覆盖当前所有数据，确定继续吗？')) return;
+        state = migrateOld(d);
+        if (d.v === 3) {
+          if (d.theme) state.theme = d.theme;
+          if (Array.isArray(d.recent)) state.recent = d.recent.filter(function (id) { return !!findTarget(id); });
+          if (d.settings) state.settings = {
+            sound: !!d.settings.sound,
+            vibrate: d.settings.vibrate !== false,
+            milestone: d.settings.milestone !== false
+          };
+        }
+        save();
+        applyTheme();
+        $('charmSelect').value = state.charm;
+        $('soundToggle').checked = state.settings.sound;
+        $('vibrateToggle').checked = state.settings.vibrate;
+        $('milestoneToggle').checked = state.settings.milestone;
+        renderArtwork();
+        renderAll();
+        toast('导入成功');
+      } catch (e) {
+        toast('导入失败：' + e.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  /* ============================================================
+     事件绑定
+     ============================================================ */
+  function bindEvents() {
+    // 主题
+    $('themeBtn').addEventListener('click', cycleTheme);
+
+    // 标签
+    document.querySelectorAll('.tab').forEach(function (t) {
+      t.addEventListener('click', function () { switchTab(t.dataset.tab); });
+    });
+
+    // 选择目标
+    $('targetCurrent').addEventListener('click', openPicker);
+
+    // 计数按钮：点击 + 长按
+    const addBtn = $('addBtn');
+    addBtn.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      initAudio();
+      startHold(add);
+    });
+    addBtn.addEventListener('pointerup', stopHold);
+    addBtn.addEventListener('pointerleave', stopHold);
+    addBtn.addEventListener('pointercancel', stopHold);
+    addBtn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+    const subBtn = $('subBtn');
+    subBtn.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      startHold(function () { sub(); });
+    });
+    subBtn.addEventListener('pointerup', stopHold);
+    subBtn.addEventListener('pointerleave', stopHold);
+    subBtn.addEventListener('pointercancel', stopHold);
+    subBtn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+    $('resetBtn').addEventListener('click', reset);
+    $('markCaughtBtn').addEventListener('click', openMarkCaught);
+
+    // 护符
+    $('charmSelect').addEventListener('change', function () {
+      state.charm = $('charmSelect').value;
+      renderCounter(); save();
+    });
+
+    // 开关
+    $('soundToggle').addEventListener('change', function () {
+      state.settings.sound = this.checked;
+      save();
+      if (this.checked) { initAudio(); soundTap(); }
+    });
+    $('vibrateToggle').addEventListener('change', function () {
+      state.settings.vibrate = this.checked;
+      save();
+      if (this.checked) vibrate(20);
+    });
+    $('milestoneToggle').addEventListener('change', function () {
+      state.settings.milestone = this.checked;
+      save();
+    });
+
+    // 搜索
+    $('caughtSearch').addEventListener('input', renderCaught);
+
+    // 统计页进行中点击跳转
+    $('activeList').addEventListener('click', function (e) {
+      const item = e.target.closest('.active-item');
+      if (!item) return;
+      selectTarget(Number(item.dataset.id));
+      switchTab('counter');
+    });
+
+    // 导出 / 导入
+    $('exportBtn').addEventListener('click', exportData);
+    $('importBtn').addEventListener('click', function () { $('importFile').click(); });
+    $('importFile').addEventListener('change', function (e) {
+      const f = e.target.files && e.target.files[0];
+      if (f) importData(f);
+      e.target.value = '';
+    });
+
+    // 弹窗关闭
+    $('modalClose').addEventListener('click', closeModal);
+    $('overlay').addEventListener('click', function (e) {
+      if (e.target === $('overlay')) closeModal();
+    });
+
+    // 已获取删除
+    bindCaughtList();
+
+    // 键盘
+    document.addEventListener('keydown', function (e) {
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'select' || tag === 'input' || tag === 'textarea') return;
+
+      if ($('overlay').classList.contains('show')) {
+        if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
+        return;
+      }
+
+      if (currentTab !== 'counter') return;
+
+      if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'Enter') {
+        e.preventDefault(); initAudio(); add(false);
+      } else if (e.key === 'Backspace' || e.key === 'ArrowDown' || e.key === 'Delete') {
+        e.preventDefault(); sub();
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault(); reset();
+      } else if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault(); showCelebrate();
+      } else if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault(); openMarkCaught();
+      }
+    });
+
+    // 双击数字也可以 +1
+    $('countDisplay').addEventListener('dblclick', function () { add(false); });
+
+    // 主题自动跟随系统
+    try {
+      const mq = window.matchMedia('(prefers-color-scheme: light)');
+      const handler = function () { if (state.theme === 'auto') applyTheme(); };
+      if (mq.addEventListener) mq.addEventListener('change', handler);
+      else if (mq.addListener) mq.addListener(handler);
+    } catch (e) {}
+  }
+
+  /* ============================================================
+     定时刷新
+     ============================================================ */
+  function startTimers() {
+    // 相对时间每 20 秒刷新
+    setInterval(function () {
+      if (currentTab === 'counter') renderLastTime();
+    }, 20000);
+    // 统计页每 30 秒刷新（如果有进行中目标）
+    setInterval(function () {
+      if (currentTab === 'stats') renderStats();
+    }, 30000);
+  }
+
+  /* ============================================================
+     启动
+     ============================================================ */
+  function init() {
+    load();
+    applyTheme();
+
+    $('charmSelect').value = state.charm;
+    $('soundToggle').checked = !!state.settings.sound;
+    $('vibrateToggle').checked = state.settings.vibrate !== false;
+    $('milestoneToggle').checked = state.settings.milestone !== false;
+
+    if (!findTarget(state.targetId)) state.targetId = 384;
+    if (!Array.isArray(state.recent) || !state.recent.length) state.recent = [state.targetId];
+
+    renderArtwork();
+    renderAll();
+    bindEvents();
+    startTimers();
+
+    // 预加载图标（延迟，避免首次打开卡顿）
+    setTimeout(preloadIcons, 800);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
+</script>
+
+<!-- ===== PWA：注册 Service Worker（离线可用，仅在 http/https/localhost 下生效） ===== -->
+<script>
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  var host = location.hostname;
+  var secure = location.protocol === 'https:' || host === 'localhost' || host === '127.0.0.1';
+  if (!secure) {
+    // file:// 或局域网 IP 下 SW 不可用，页面本身仍可正常使用
+    return;
+  }
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').then(function (reg) {
+      // 有更新时，下次进入自动生效
+      reg.addEventListener('updatefound', function () {
+        var w = reg.installing;
+        if (!w) return;
+        w.addEventListener('statechange', function () {
+          if (w.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('计数器已更新，刷新后生效');
+          }
+        });
+      });
+    }).catch(function (e) {
+      console.log('SW 注册失败:', e);
+    });
+  });
+})();
+</script>
+</body>
+</html>

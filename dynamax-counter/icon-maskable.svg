@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="极巨大冒险计数器">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0d12"/>
+      <stop offset="1" stop-color="#1c2030"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6ab8ff"/>
+      <stop offset="1" stop-color="#2d6bb3"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.18" r="0.75">
+      <stop offset="0" stop-color="#4a9eff" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#4a9eff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- maskable：整块铺满，图形收在中心 80% 安全区内 -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#glow)"/>
+
+  <circle cx="256" cy="256" r="146" fill="none" stroke="url(#ring)" stroke-width="20"/>
+  <line x1="110" y1="256" x2="402" y2="256" stroke="url(#ring)" stroke-width="20" stroke-linecap="round"/>
+  <circle cx="256" cy="256" r="46" fill="#0b0d12" stroke="url(#ring)" stroke-width="16"/>
+  <circle cx="256" cy="256" r="14" fill="#eef0f6" opacity="0.9"/>
+
+  <path d="M370 140 L379 168 L407 177 L379 186 L370 214 L361 186 L333 177 L361 168 Z" fill="#ffd54a"/>
+  <path d="M142 348 L148 367 L167 373 L148 379 L142 398 L136 379 L117 373 L136 367 Z" fill="#ffd54a" opacity="0.85"/>
+  <circle cx="382" cy="312" r="6" fill="#ffd54a" opacity="0.8"/>
+</svg>
