@@ -7,12 +7,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="极巨大冒险计数器">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="description" content="宝可梦剑/盾 冠之雪原 极巨大冒险刷闪计数器：多目标独立计数、闪光概率计算、获取记录与统计，支持离线使用。">
-<title>✨ 极巨大冒险计数器</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<title>✨ 极巨大冒险计数器</title>
 <style>
   :root, [data-theme="dark"] {
     --bg: #0b0d12; --card: #151822; --card-2: #1c2030; --card-3: #232838;
@@ -40,16 +38,6 @@
     display: flex; justify-content: center; padding: 18px 16px 56px;
     background-image: radial-gradient(ellipse 80% 50% at 50% 0%, var(--bg-glow), transparent 70%);
     transition: background-color 0.3s, color 0.3s;
-    overscroll-behavior-y: contain;
-  }
-  /* 全面屏安全区（刘海 / 底部指示条） */
-  @supports (padding: env(safe-area-inset-bottom)) {
-    body {
-      padding-top: calc(18px + env(safe-area-inset-top, 0px));
-      padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-      padding-left: calc(16px + env(safe-area-inset-left, 0px));
-      padding-right: calc(16px + env(safe-area-inset-right, 0px));
-    }
   }
   .container { width: 100%; max-width: 580px; }
 
@@ -72,18 +60,18 @@
 
   /* ===== 标签 ===== */
   .tabs {
-    display: flex; gap: 6px; background: var(--card); border: 1px solid var(--border);
+    display: flex; gap: 4px; background: var(--card); border: 1px solid var(--border);
     border-radius: 14px; padding: 6px; margin-bottom: 16px;
   }
   .tab {
-    flex: 1; padding: 11px 4px; font-size: 14px; font-weight: 600; color: var(--muted);
+    flex: 1; padding: 11px 2px; font-size: 13px; font-weight: 600; color: var(--muted);
     background: transparent; border: none; border-radius: 10px; cursor: pointer;
     transition: all 0.2s; font-family: inherit; white-space: nowrap;
   }
   .tab.active { background: var(--card-2); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
   .tab .badge {
-    display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px;
-    font-size: 11px; line-height: 18px; color: #fff; background: var(--accent);
+    display: inline-block; min-width: 18px; padding: 0 4px; margin-left: 4px;
+    font-size: 10px; line-height: 18px; color: #fff; background: var(--accent);
     border-radius: 9px; font-weight: 700;
   }
 
@@ -104,7 +92,6 @@
     padding: 4px; border-radius: 12px; transition: background 0.15s;
   }
   .target-current:hover { background: var(--card-2); }
-  .target-current:active { transform: scale(0.995); }
   .target-mini-icon {
     width: 48px; height: 48px; object-fit: contain; flex-shrink: 0;
     filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
@@ -126,10 +113,8 @@
     color: var(--text-2); max-width: 100%;
   }
   .recent-chip:hover { border-color: var(--accent); }
-  .recent-chip:active { transform: scale(0.96); }
   .recent-chip img { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
   .recent-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .recent-chip.active { border-color: var(--accent); background: rgba(74,158,255,0.1); }
 
   /* ===== 计数卡 ===== */
   .counter-card { text-align: center; padding: 18px 20px 24px; }
@@ -197,15 +182,15 @@
   .btn-caught:hover { background: rgba(255, 213, 74, 0.15); }
   .btn-caught:active { transform: scale(0.98); }
 
-  /* ===== 设置 ===== */
+  /* ===== 设置页 ===== */
   .setting-row {
     display: flex; align-items: center; justify-content: space-between;
-    gap: 12px; padding: 10px 0;
+    gap: 12px; padding: 14px 0;
   }
   .setting-row + .setting-row { border-top: 1px solid var(--border); }
-  .setting-row label { font-size: 14px; color: var(--text-2); flex-shrink: 0; }
+  .setting-row label { font-size: 15px; color: var(--text-2); flex-shrink: 0; }
   .setting-row select {
-    flex: 1; max-width: 62%; padding: 9px 32px 9px 12px; font-size: 13px; color: var(--text);
+    flex: 1; max-width: 65%; padding: 10px 32px 10px 14px; font-size: 14px; color: var(--text);
     background: var(--card-2); border: 1px solid var(--border); border-radius: 10px;
     cursor: pointer; font-family: inherit; appearance: none;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23858b9e' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
@@ -213,7 +198,6 @@
   }
   .setting-row select:focus { outline: none; border-color: var(--accent); }
 
-  /* 开关 */
   .switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
   .switch input { opacity: 0; width: 0; height: 0; }
   .switch .slider {
@@ -226,6 +210,12 @@
   }
   .switch input:checked + .slider { background: var(--accent); border-color: var(--accent); }
   .switch input:checked + .slider::before { transform: translateX(20px); background: #fff; }
+
+  .maker-card {
+    text-align: center; padding: 30px 20px; background: transparent; border: none; margin-top: 10px;
+  }
+  .maker-text { font-size: 13px; color: var(--muted); letter-spacing: 1px; }
+  .maker-name { font-size: 16px; font-weight: 700; color: var(--text-2); margin-top: 6px; }
 
   /* ===== 统计 ===== */
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 4px; }
@@ -432,7 +422,7 @@
   <div class="topbar">
     <div>
       <h1>✨ 极巨大冒险<span>计数器</span></h1>
-      <div class="topbar-sub">剑/盾 · 冠之雪原 · 每一轮都是一次机会</div>
+      <div class="topbar-sub">剑/盾 · 冠之雪原 · 说不定下一次就中了</div>
     </div>
     <button class="icon-btn" id="themeBtn" title="切换主题">🌙</button>
   </div>
@@ -441,10 +431,11 @@
     <button class="tab active" data-tab="counter">计数器</button>
     <button class="tab" data-tab="caught">已获取<span class="badge" id="caughtBadge" style="display:none">0</span></button>
     <button class="tab" data-tab="stats">统计</button>
+    <button class="tab" data-tab="settings">设置</button>
   </nav>
 
   <!-- ============ 计数器 ============ -->
-  <div class="page active" id="page-counter">
+  <div class="page active" id="page-counter"
 
     <div class="card target-card">
       <div class="target-current" id="targetCurrent">
@@ -472,28 +463,6 @@
         <button class="danger" id="resetBtn">重置</button>
       </div>
       <button class="btn-caught" id="markCaughtBtn">✨ 标记为已获取</button>
-    </div>
-
-    <div class="card">
-      <div class="setting-row">
-        <label for="charmSelect">闪耀护符</label>
-        <select id="charmSelect">
-          <option value="charm">有闪耀护符（1/100）</option>
-          <option value="noCharm">无闪耀护符（1/300）</option>
-        </select>
-      </div>
-      <div class="setting-row">
-        <label>计数音效</label>
-        <label class="switch"><input type="checkbox" id="soundToggle"><span class="slider"></span></label>
-      </div>
-      <div class="setting-row">
-        <label>震动反馈</label>
-        <label class="switch"><input type="checkbox" id="vibrateToggle"><span class="slider"></span></label>
-      </div>
-      <div class="setting-row">
-        <label>里程碑提示</label>
-        <label class="switch"><input type="checkbox" id="milestoneToggle"><span class="slider"></span></label>
-      </div>
     </div>
 
     <div class="card" style="padding:0; overflow:hidden;">
@@ -536,7 +505,7 @@
       <div id="caughtList"></div>
     </div>
     <div class="hint">
-      数据保存在浏览器本地 · 可在统计页导出备份
+      数据保存在浏览器本地 · 可在“设置”页导出备份
     </div>
   </div>
 
@@ -575,6 +544,32 @@
       <div class="section-title">已获取排行榜</div>
       <div id="rankingList"></div>
     </div>
+  </div>
+
+  <!-- ============ 设置 ============ -->
+  <div class="page" id="page-settings">
+    <div class="card">
+      <div class="section-title">概率与偏好</div>
+      <div class="setting-row">
+        <label for="charmSelect">闪耀护符</label>
+        <select id="charmSelect">
+          <option value="charm">有闪耀护符（1/100）</option>
+          <option value="noCharm">无闪耀护符（1/300）</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>计数音效</label>
+        <label class="switch"><input type="checkbox" id="soundToggle"><span class="slider"></span></label>
+      </div>
+      <div class="setting-row">
+        <label>震动反馈</label>
+        <label class="switch"><input type="checkbox" id="vibrateToggle"><span class="slider"></span></label>
+      </div>
+      <div class="setting-row">
+        <label>里程碑提示</label>
+        <label class="switch"><input type="checkbox" id="milestoneToggle"><span class="slider"></span></label>
+      </div>
+    </div>
 
     <div class="card">
       <div class="section-title">数据管理</div>
@@ -586,6 +581,11 @@
       <div class="hint" style="margin-top:14px; text-align:left; line-height:1.7;">
         导出的 JSON 文件包含所有计数、获取记录和设置。换设备时导入即可恢复。清除浏览器数据前记得备份。
       </div>
+    </div>
+
+    <div class="maker-card">
+      <div class="maker-text">— 制作人 —</div>
+      <div class="maker-name">bili普雷格斯</div>
     </div>
   </div>
 
@@ -794,7 +794,11 @@
     if (!raw) { state = defaultState(); return; }
     try {
       const d = JSON.parse(raw);
-      state = migrateOld(d);
+      if (d && d.v === 3) {
+        state = migrateOld(d);
+      } else {
+        state = migrateOld(d);
+      }
       if (d && d.v === 3) {
         // v3 直接使用结构化字段
         if (d.theme) state.theme = d.theme;
@@ -1119,14 +1123,13 @@
   function checkMilestones(oldCount, newCount, p) {
     if (!state.settings.milestone) return;
     if (newCount <= oldCount) return;
-    // 长按可能一次跨过多个档位，这里取跨过的最高档
-    let reached = null;
-    MILES.forEach(function (r) {
+    const m = MILES.find(function (r) {
       const need = encountersFor(p, r);
-      if (oldCount < need && newCount >= need) reached = r;
+      return oldCount < need && newCount >= need;
     });
-    if (reached != null) {
-      toast('🎯 累积概率已达到 ' + Math.round(reached * 100) + '%', true);
+    if (m) {
+      const label = Math.round(m * 100) + '%';
+      toast('🎯 累积概率已达到 ' + label, true);
       soundMilestone();
     }
   }
@@ -1394,6 +1397,7 @@
     $('page-counter').classList.toggle('active', name === 'counter');
     $('page-caught').classList.toggle('active', name === 'caught');
     $('page-stats').classList.toggle('active', name === 'stats');
+    $('page-settings').classList.toggle('active', name === 'settings');
     if (name === 'caught') renderCaught();
     if (name === 'stats') renderStats();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1556,6 +1560,11 @@
         return;
       }
 
+      if (e.key === 'Tab') {
+        // 允许默认 tab，但这里不拦截，让浏览器焦点
+        return;
+      }
+
       if (currentTab !== 'counter') return;
 
       if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'Enter') {
@@ -1630,33 +1639,15 @@
 })();
 </script>
 
-<!-- ===== PWA：注册 Service Worker（离线可用，仅在 http/https/localhost 下生效） ===== -->
+<!-- PWA 注册 -->
 <script>
-(function () {
-  if (!('serviceWorker' in navigator)) return;
-  var host = location.hostname;
-  var secure = location.protocol === 'https:' || host === 'localhost' || host === '127.0.0.1';
-  if (!secure) {
-    // file:// 或局域网 IP 下 SW 不可用，页面本身仍可正常使用
-    return;
-  }
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').then(function (reg) {
-      // 有更新时，下次进入自动生效
-      reg.addEventListener('updatefound', function () {
-        var w = reg.installing;
-        if (!w) return;
-        w.addEventListener('statechange', function () {
-          if (w.state === 'installed' && navigator.serviceWorker.controller) {
-            console.log('计数器已更新，刷新后生效');
-          }
-        });
-      });
-    }).catch(function (e) {
-      console.log('SW 注册失败:', e);
+    navigator.serviceWorker.register('sw.js').catch(function (e) {
+      console.log('SW 注册失败（需要 HTTP/HTTPS 环境）:', e);
     });
   });
-})();
+}
 </script>
 </body>
 </html>
